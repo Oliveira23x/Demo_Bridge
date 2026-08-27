@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge — Painel de Acompanhamento</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons (A great alternative to Lucide for Vanilla JS) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper: #F1F0EC;
+            --paper-raised: #FFFFFF;
+            --ink: #1E2A3A;
+            --ink-soft: #5B6672;
+            --hairline: #DAD6CC;
+            --teal: #3A6B63;
+            --teal-soft: #E4ECEA;
+            --low: #4B7B63;
+            --low-soft: #E5EEE8;
+            --medium: #B8862F;
+            --medium-soft: #F5EBD8;
+            --high: #A0442E;
+            --high-soft: #F3E2DC;
+        }
+
+        body {
+            background-color: var(--paper);
+            font-family: 'IBM Plex Sans', sans-serif;
+            color: var(--ink);
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .font-serif-custom { font-family: 'Source Serif 4', serif; }
+        .font-mono-custom { font-family: 'IBM Plex Mono', monospace; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.3s ease-out forwards;
+        }
+        
+        @keyframes pulse-custom {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-custom {
+            animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Custom Scrollbar for textareas */
+        textarea::-webkit-scrollbar { width: 6px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 4px; }
+    </style>
+</head>
+<body class="min-h-screen w-full flex justify-center p-4 sm:p-8">
+    <div class="w-full max-w-5xl flex flex-col gap-6" id="app-container">
+        
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg shadow-sm" style="background: var(--ink)">
+                        <span class="text-base font-bold text-white font-mono-custom">B</span>
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight font-serif-custom" style="color: var(--ink)">
+                        Bridge — Painel de Acompanhamento
+                    </h1>
+                </div>
+                <p class="text-sm font-medium" style="color: var(--ink-soft)">
+                    Técnico em Desenvolvimento de Sistemas · Retention Intelligence
+                </p>
+            </div>
+            <div class="self-start rounded-full px-4 py-1.5 text-sm font-bold border shadow-sm" 
+                 style="background: var(--teal-soft); color: var(--teal); border-color: #3A6B6333;">
+                Sandbox Interativo (HTML/JS)
+            </div>
+        </header>
+
+        <!-- Info Banner -->
+        <div class="flex items-start gap-3 rounded-xl border px-5 py-4 shadow-sm" 
+             style="border-color: var(--hairline); background: var(--paper-raised)">
+            <i class="ph-bold ph-info mt-0.5 shrink-0 text-xl" style="color: var(--teal)"></i>
+            <p class="text-sm leading-relaxed" style="color: var(--ink-soft)">
+                <span style="color: var(--ink); font-weight: 600;">Bridge apoia a decisão institucional.</span> 
+                As recomendações abaixo não são finais. Você pode interagir com os cards, marcar alunos como revisados ou simular contato.
+            </p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="stats-container">
+            <!-- Rendered via JS -->
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="flex flex-col gap-5 mt-2">
+            <!-- Controls -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50 p-2 rounded-2xl border" style="border-color: var(--hairline)">
+                <!-- Quick Filters -->
+                <div class="flex flex-wrap gap-2 p-1" id="filters-container">
+                    <!-- Rendered via JS -->
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-3 pr-2">
+                    <div class="relative w-full sm:w-64">
+                        <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-lg" style="color: var(--ink-soft)"></i>
+                        <input type="text" id="search-input" placeholder="Buscar aluno ou ID..." 
+                               class="w-full rounded-full border py-2 pl-9 pr-4 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:border-transparent bg-white shadow-sm"
+                               style="border-color: var(--hairline); color: var(--ink)">
+                    </div>
+                    
+                    <div class="relative w-full sm:w-auto">
+                        <i class="ph-bold ph-sort-ascending absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-lg" style="color: var(--ink-soft)"></i>
+                        <select id="sort-select" class="w-full sm:w-auto appearance-none rounded-full border py-2 pl-9 pr-8 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:border-transparent bg-white shadow-sm cursor-pointer"
+                                style="border-color: var(--hairline); color: var(--ink)">
+                            <option value="score_desc">Maior Risco</option>
+                            <option value="score_asc">Menor Risco</option>
+                            <option value="name_asc">A-Z (Nome)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student List -->
+            <div class="flex flex-col gap-4" id="student-list-container">
+                <!-- Rendered via JS -->
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-8 mb-4 border-t pt-6" style="border-color: var(--hairline)">
+            <p class="text-center text-sm font-medium" style="color: var(--ink-soft)">
+                MVP em sandbox local · UI Interativa Atualizada (Vanilla HTML/JS)
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Mock Data ---
+        const RAW_STUDENTS = [
+            {
+                id: "student_014", name: "Fernanda Torres", course: "Técnico em Desenvolvimento de Sistemas", score: 81, level: "high",
+                factors: [
+                    { label: "Frequência", value: 58, note: "58% no período — abaixo do mínimo institucional" },
+                    { label: "Média de notas", value: 52, note: "5.2 de média — queda de 1.3 ponto no bimestre" },
+                    { label: "Engajamento", value: 20, note: "Baixo engajamento em atividades e fórum" },
+                    { label: "Inatividade", value: 21, note: "21 dias sem atividade registrada" }
+                ],
+                agents: [
+                    { role: "InstitutionAgent", icon: "ph-buildings", text: "Sinalizar para coordenação pedagógica dentro de 5 dias úteis; padrão de frequência é o fator dominante." },
+                    { role: "StudentSuccessAgent", icon: "ph-handshake", text: "Sugerir contato de acolhimento antes de qualquer cobrança acadêmica; investigar motivo da inatividade recente." },
+                    { role: "CareerAgent", icon: "ph-briefcase", text: "Pausar recomendações de empregabilidade até estabilização de frequência e entrega." }
+                ]
+            },
+            {
+                id: "student_009", name: "Lucas Andrade", course: "Técnico em Desenvolvimento de Sistemas", score: 88, level: "high",
+                factors: [
+                    { label: "Frequência", value: 64, note: "64% no período" },
+                    { label: "Média de notas", value: 45, note: "4.5 de média nas últimas avaliações" },
+                    { label: "Engajamento", value: 15, note: "Sem participação em atividades práticas" },
+                    { label: "Inatividade", value: 30, note: "30 dias sem login na plataforma" }
+                ],
+                agents: [
+                    { role: "InstitutionAgent", icon: "ph-buildings", text: "Prioridade alta para revisão humana — combinação de inatividade longa e queda de nota." },
+                    { role: "StudentSuccessAgent", icon: "ph-handshake", text: "Recomendar conversa individual sobre carga horária e possíveis barreiras externas." },
+                    { role: "CareerAgent", icon: "ph-briefcase", text: "Sem recomendação de oportunidades até reengajamento confirmado." }
+                ]
+            },
+            {
+                id: "student_022", name: "Mariana Costa", course: "Técnico em Desenvolvimento de Sistemas", score: 61, level: "medium",
+                factors: [
+                    { label: "Frequência", value: 74, note: "74% no período — próximo do limite" },
+                    { label: "Média de notas", value: 68, note: "6.8 de média, estável" },
+                    { label: "Engajamento", value: 50, note: "Engajamento moderado, queda recente em fóruns" },
+                    { label: "Inatividade", value: 11, note: "11 dias sem atividade" }
+                ],
+                agents: [
+                    { role: "InstitutionAgent", icon: "ph-buildings", text: "Acompanhar no próximo ciclo; ainda não atinge critério de prioridade alta." },
+                    { role: "StudentSuccessAgent", icon: "ph-handshake", text: "Mensagem de check-in proativa antes da próxima avaliação." },
+                    { role: "CareerAgent", icon: "ph-briefcase", text: "Pode receber conteúdo de empregabilidade nível introdutório." }
+                ]
+            },
+            {
+                id: "student_003", name: "Carlos Eduardo Lima", course: "Técnico em Desenvolvimento de Sistemas", score: 54, level: "medium",
+                factors: [
+                    { label: "Frequência", value: 78, note: "78% no período" },
+                    { label: "Média de notas", value: 68, note: "6.8 de média" },
+                    { label: "Engajamento", value: 55, note: "Engajamento médio" },
+                    { label: "Inatividade", value: 9, note: "9 dias sem atividade" }
+                ],
+                agents: [
+                    { role: "InstitutionAgent", icon: "ph-buildings", text: "Manter monitoramento padrão; sem sinal de urgência." },
+                    { role: "StudentSuccessAgent", icon: "ph-handshake", text: "Oferecer material de reforço na disciplina com menor média." },
+                    { role: "CareerAgent", icon: "ph-briefcase", text: "Elegível para trilha de empregabilidade padrão." }
+                ]
+            },
+            {
+                id: "student_007", name: "Ana Beatriz Souza", course: "Técnico em Desenvolvimento de Sistemas", score: 18, level: "low",
+                factors: [
+                    { label: "Frequência", value: 92, note: "92% no período" },
+                    { label: "Média de notas", value: 84, note: "8.4 de média" },
+                    { label: "Engajamento", value: 88, note: "Alto engajamento" },
+                    { label: "Inatividade", value: 2, note: "2 dias sem atividade" }
+                ],
+                agents: [
+                    { role: "InstitutionAgent", icon: "ph-buildings", text: "Nenhuma ação institucional necessária." },
+                    { role: "StudentSuccessAgent", icon: "ph-handshake", text: "Perfil estável; manter acompanhamento de rotina." },
+                    { role: "CareerAgent", icon: "ph-briefcase", text: "Elegível para oportunidades avançadas de empregabilidade." }
+                ]
+            }
+        ];
+
+        // --- Configuration & Constants ---
+        const LEVEL_META = {
+            high: { label: "Risco alto", color: "var(--high)", soft: "var(--high-soft)" },
+            medium: { label: "Risco médio", color: "var(--medium)", soft: "var(--medium-soft)" },
+            low: { label: "Risco baixo", color: "var(--low)", soft: "var(--low-soft)" },
+        };
+
+        const TEMPLATES = {
+            whatsapp: (firstName, course) => `Olá ${firstName}, tudo bem? Sou da equipe de sucesso do aluno da Bridge.\n\nNotei que você reduziu um pouco o ritmo no curso de ${course}. Aconteceu alguma coisa? Como podemos te ajudar a retomar suas atividades com tranquilidade?`,
+            emailBody: (firstName, course) => `Olá ${firstName},\n\nEspero que este e-mail o encontre bem.\n\nNotamos pela nossa plataforma que você está passando por um momento de menor interação no curso de ${course}. O nosso objetivo é garantir que você tenha a melhor experiência possível e alcance seus objetivos.\n\nGostaríamos de saber se está tudo bem ou se há algo em que possamos apoiar para que retome suas atividades.\n\nFicamos à disposição.\n\nAtenciosamente,\nEquipe de Acompanhamento Bridge`,
+            emailSubject: (course) => `Acompanhamento Bridge - Curso de ${course}`
+        };
+
+        // --- Application State ---
+        const state = {
+            filter: 'all',
+            searchQuery: '',
+            sortBy: 'score_desc',
+            expandedId: null,
+            students: RAW_STUDENTS.map(s => ({
+                ...s,
+                isReviewed: false,
+                showContactForm: false,
+                contactMethod: 'whatsapp', // whatsapp, email, phone
+                messageText: '',
+                emailSubject: '',
+                isSending: false,
+                isSent: false
+            }))
+        };
+
+        // --- Helper Functions ---
+        const getFirstName = (fullName) => fullName.split(' ')[0];
+
+        function calculateCounts() {
+            return state.students.reduce((acc, s) => {
+                acc[s.level] += 1;
+                return acc;
+            }, { low: 0, medium: 0, high: 0 });
+        }
+
+        // --- Render Functions ---
+        function renderStats() {
+            const counts = calculateCounts();
+            const container = document.getElementById('stats-container');
+            
+            const statCards = [
+                { label: "Total de Estudantes", value: state.students.length, icon: "ph-users", color: null, soft: "var(--teal-soft)", iconColor: "var(--teal)" },
+                { label: "Atenção Urgente", value: counts.high, icon: "ph-shield-warning", color: "var(--high)", soft: "#A0442E1A", iconColor: "var(--high)" },
+                { label: "Aguardando Ação", value: state.students.length, icon: "ph-clipboard-text", color: "var(--medium)", soft: "#B8862F1A", iconColor: "var(--medium)" },
+                { label: "Última Atualização", value: "Agora mesmo", icon: "ph-clock", color: null, soft: "var(--teal-soft)", iconColor: "var(--teal)" },
+            ];
+
+            container.innerHTML = statCards.map(card => `
+                <div class="group flex flex-1 items-center gap-3 rounded-xl border px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-default" style="background: var(--paper-raised); border-color: var(--hairline)">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full transition-transform group-hover:scale-110" style="background: ${card.soft}">
+                        <i class="ph-bold ${card.icon} text-lg" style="color: ${card.iconColor}"></i>
+                    </div>
+                    <div>
+                        <div class="text-xl font-bold font-serif-custom" style="color: var(--ink)">${card.value}</div>
+                        <div class="text-xs font-medium" style="color: var(--ink-soft)">${card.label}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderFilters() {
+            const counts = calculateCounts();
+            const container = document.getElementById('filters-container');
+            
+            const filters = [
+                { key: "all", label: "Todos", count: state.students.length },
+                { key: "high", label: "Risco Alto", count: counts.high },
+                { key: "medium", label: "Risco Médio", count: counts.medium },
+                { key: "low", label: "Risco Baixo", count: counts.low },
+            ];
+
+            container.innerHTML = filters.map(f => `
+                <button data-action="filter" data-value="${f.key}"
+                    class="rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 flex items-center gap-1.5"
+                    style="background: ${state.filter === f.key ? 'var(--ink)' : 'transparent'}; 
+                           color: ${state.filter === f.key ? 'var(--paper-raised)' : 'var(--ink-soft)'}">
+                    ${f.label} 
+                    <span class="px-1.5 py-0.5 rounded-md text-[10px]" style="background: ${state.filter === f.key ? 'rgba(255,255,255,0.2)' : '#E2E8F0'}">
+                        ${f.count}
+                    </span>
+                </button>
+            `).join('');
+        }
+
+        function getExplainStripHTML(factors) {
+            return `
+                <div class="flex flex-col gap-3">
+                    ${factors.map(f => `
+                        <div class="flex flex-col gap-2 p-3.5 rounded-lg border bg-slate-50/50 transition-colors hover:bg-slate-50" style="border-color: var(--hairline)">
+                            <div class="flex items-center justify-between mb-0.5">
+                                <span class="text-xs font-bold uppercase tracking-wide" style="color: var(--ink)">
+                                    ${f.label}
+                                </span>
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-white shadow-sm border font-mono-custom" style="color: var(--ink); border-color: var(--hairline)">
+                                    Índice: ${f.value}
+                                </span>
+                            </div>
+                            
+                            <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80 relative">
+                                <div class="h-full rounded-full transition-all duration-1000 ease-out absolute left-0 top-0"
+                                    style="width: ${f.value}%; background: var(--teal); opacity: ${0.6 + f.value / 250}">
+                                </div>
+                            </div>
+                            
+                            <p class="text-[13px] leading-relaxed mt-1.5 font-medium" style="color: var(--ink-soft)">
+                                ${f.note}
+                            </p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getContactFormHTML(s) {
+            if (!s.showContactForm) return '';
+
+            const isWpp = s.contactMethod === 'whatsapp';
+            const isEmail = s.contactMethod === 'email';
+            const isPhone = s.contactMethod === 'phone';
+            
+            let btnClass = isWpp ? 'bg-green-600' : isEmail ? 'bg-blue-600' : 'bg-purple-600';
+            let btnIcon = s.isSending ? 'ph-spinner ph-spin' : isWpp ? 'ph-paper-plane-right' : isEmail ? 'ph-paper-plane-right' : 'ph-check-circle';
+            let btnText = s.isSending ? 'Processando...' : isWpp ? 'Enviar WhatsApp' : isEmail ? 'Enviar E-mail' : 'Registrar Ligação';
+
+            return `
+                <div class="flex flex-col gap-4 animate-slide-down rounded-xl border p-5 bg-white shadow-lg shadow-slate-200/50" style="border-color: var(--hairline)">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold flex items-center gap-2" style="color: var(--ink)">
+                            Escolha o canal de contato
+                        </span>
+                        <button data-action="close-contact" data-id="${s.id}" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-colors">
+                            <i class="ph-bold ph-x"></i>
+                        </button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex gap-2 p-1 rounded-lg bg-slate-100/80">
+                        <button data-action="switch-method" data-method="whatsapp" data-id="${s.id}"
+                            class="flex-1 flex justify-center items-center gap-2 py-1.5 text-xs font-semibold rounded-md transition-all ${isWpp ? 'bg-white shadow-sm text-green-600' : 'text-slate-500 hover:text-slate-700'}">
+                            <i class="ph-bold ph-device-mobile text-sm"></i> WhatsApp
+                        </button>
+                        <button data-action="switch-method" data-method="email" data-id="${s.id}"
+                            class="flex-1 flex justify-center items-center gap-2 py-1.5 text-xs font-semibold rounded-md transition-all ${isEmail ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}">
+                            <i class="ph-bold ph-envelope-simple text-sm"></i> E-mail
+                        </button>
+                        <button data-action="switch-method" data-method="phone" data-id="${s.id}"
+                            class="flex-1 flex justify-center items-center gap-2 py-1.5 text-xs font-semibold rounded-md transition-all ${isPhone ? 'bg-white shadow-sm text-purple-600' : 'text-slate-500 hover:text-slate-700'}">
+                            <i class="ph-bold ph-phone text-sm"></i> Telefone
+                        </button>
+                    </div>
+                    
+                    <!-- Form Area -->
+                    <div class="flex flex-col gap-3">
+                        ${isEmail ? `
+                            <input type="text" data-input="subject" data-id="${s.id}" value="${s.emailSubject}" placeholder="Assunto do E-mail"
+                                class="w-full p-2.5 text-sm rounded-lg border focus:ring-2 focus:outline-none transition-shadow font-medium"
+                                style="border-color: var(--hairline); color: var(--ink)">
+                        ` : ''}
+
+                        ${isPhone ? `
+                            <div class="p-3 rounded-lg bg-purple-50 border border-purple-100 text-xs text-purple-800 leading-relaxed mb-1">
+                                <span class="font-bold flex items-center gap-1.5 mb-1"><i class="ph-bold ph-info"></i> Roteiro Sugerido:</span>
+                                1. Pergunte se é um bom momento para falar.<br/>
+                                2. Comente que notou a inatividade recente de forma empática.<br/>
+                                3. Ofereça ajuda com acesso ou renegociação de prazos.
+                            </div>
+                        ` : ''}
+                        
+                        <textarea data-input="message" data-id="${s.id}"
+                            class="w-full ${isPhone ? 'h-20' : 'h-32'} p-3 text-sm rounded-lg border focus:ring-2 focus:outline-none resize-none transition-shadow"
+                            style="border-color: var(--hairline); color: var(--ink); outline-color: ${isWpp ? '#16a34a' : isEmail ? '#2563eb' : '#9333ea'}"
+                            placeholder="${isPhone ? 'Registre os pontos principais da ligação aqui...' : 'Escreva sua mensagem...'}"
+                            ${s.isSending ? 'disabled' : ''}>${s.messageText}</textarea>
+                    </div>
+                    
+                    <div class="flex justify-end gap-2 mt-2">
+                        <button data-action="close-contact" data-id="${s.id}"
+                            class="px-4 py-2 text-xs font-medium rounded-lg hover:bg-slate-100 transition-colors text-slate-600"
+                            ${s.isSending ? 'disabled' : ''}>
+                            Cancelar
+                        </button>
+                        <button data-action="send-message" data-id="${s.id}"
+                            ${s.isSending || (!isPhone && !s.messageText.trim()) ? 'disabled' : ''}
+                            class="flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-lg transition-all shadow-sm hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white ${btnClass}">
+                            <i class="ph-bold ${btnIcon}"></i>
+                            ${btnText}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStudents() {
+            const container = document.getElementById('student-list-container');
+            
+            // Apply filtering, searching, and sorting
+            let processed = state.students;
+            
+            if (state.filter !== 'all') {
+                processed = processed.filter(s => s.level === state.filter);
+            }
+            
+            if (state.searchQuery.trim() !== '') {
+                const q = state.searchQuery.toLowerCase();
+                processed = processed.filter(s => s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q));
+            }
+
+            processed = [...processed].sort((a, b) => {
+                if (state.sortBy === "score_desc") return b.score - a.score;
+                if (state.sortBy === "score_asc") return a.score - b.score;
+                if (state.sortBy === "name_asc") return a.name.localeCompare(b.name);
+                return 0;
+            });
+
+            if (processed.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-16 px-4 text-center rounded-xl border border-dashed bg-white/50" style="border-color: var(--hairline)">
+                        <i class="ph-bold ph-magnifying-glass text-4xl mb-4 opacity-20" style="color: var(--ink)"></i>
+                        <h3 class="text-lg font-bold mb-1" style="color: var(--ink)">Nenhum estudante encontrado</h3>
+                        <p class="text-sm max-w-sm" style="color: var(--ink-soft)">
+                            Não encontramos resultados para "${state.searchQuery}" com o filtro selecionado.
+                        </p>
+                        <button data-action="clear-filters" class="mt-4 px-4 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-slate-100" style="color: var(--ink)">
+                            Limpar Filtros
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Generate HTML for each student
+            container.innerHTML = processed.map(s => {
+                const meta = LEVEL_META[s.level];
+                const isExpanded = state.expandedId === s.id;
+                
+                // Style variables based on review state
+                const cardBg = s.isReviewed ? 'var(--teal-soft)' : 'var(--paper-raised)';
+                const cardBorder = s.isReviewed ? 'var(--teal)' : 'var(--hairline)';
+                const indicatorColor = s.isReviewed ? 'var(--teal)' : meta.color;
+                
+                return `
+                    <div class="overflow-hidden rounded-xl border transition-all duration-300 ${isExpanded ? 'shadow-md ring-1 ring-slate-900/5' : 'hover:shadow-sm'}"
+                         style="background: ${cardBg}; border-color: ${cardBorder}">
+                        
+                        <!-- Header / Button -->
+                        <button data-action="toggle-expand" data-id="${s.id}" class="flex w-full items-center justify-between gap-4 px-5 py-4 text-left hover:bg-slate-50/50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-1 rounded-full" style="background: ${indicatorColor}"></div>
+                                <div>
+                                    <div class="text-sm font-semibold flex items-center gap-1.5 font-serif-custom" style="color: var(--ink)">
+                                        ${s.name}
+                                        ${s.isReviewed ? `<i class="ph-fill ph-check-circle text-sm" style="color: var(--teal)"></i>` : ''}
+                                    </div>
+                                    <div class="text-xs mt-0.5" style="color: var(--ink-soft)">
+                                        ${s.course} · ${s.id}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                ${!s.isReviewed ? `
+                                    <div class="flex items-center gap-2 rounded-full px-3 py-1 shadow-sm transition-transform hover:scale-105" style="background: ${meta.soft}">
+                                        <span class="inline-block h-2 w-2 rounded-full animate-pulse-custom" style="background: ${meta.color}"></span>
+                                        <span class="text-xs font-medium" style="color: ${meta.color}">${meta.label}</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 rounded-md bg-white/50 font-mono-custom" style="color: ${meta.color}">${s.score}</span>
+                                    </div>
+                                ` : `
+                                    <span class="text-xs font-medium px-3 py-1 rounded-full bg-white text-teal-700 shadow-sm border border-teal-100">
+                                        Revisado
+                                    </span>
+                                `}
+                                <div class="p-1 rounded-full hover:bg-slate-200/50 transition-colors">
+                                    <i class="ph-bold ph-caret-down text-lg" style="color: var(--ink-soft); transform: ${isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}; transition: transform 0.2s ease;"></i>
+                                </div>
+                            </div>
+                        </button>
+
+                        <!-- Expanded Content -->
+                        ${isExpanded ? `
+                            <div class="border-t px-5 py-6 animate-slide-down" style="border-color: ${s.isReviewed ? 'rgba(58, 107, 99, 0.2)' : 'var(--hairline)'}; background: var(--paper-raised)">
+                                <div class="grid gap-8 md:grid-cols-2">
+                                    
+                                    <!-- Left: Factors -->
+                                    <div>
+                                        <div class="mb-4 text-xs font-bold uppercase tracking-wider" style="color: var(--ink-soft)">
+                                            Detalhes do Risco
+                                        </div>
+                                        ${getExplainStripHTML(s.factors)}
+                                    </div>
+
+                                    <!-- Right: Agents & Actions -->
+                                    <div class="flex flex-col h-full justify-between">
+                                        <div>
+                                            <div class="mb-4 text-xs font-bold uppercase tracking-wider" style="color: var(--ink-soft)">
+                                                Insights da IA (Agentes)
+                                            </div>
+                                            <div class="flex flex-col gap-4">
+                                                ${s.agents.map(a => `
+                                                    <div class="flex gap-3 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                                                        <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full shadow-sm" style="background: var(--paper-raised)">
+                                                            <i class="ph-bold ${a.icon} text-sm" style="color: var(--teal)"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-xs font-semibold font-mono-custom" style="color: var(--ink)">${a.role}</div>
+                                                            <p class="text-xs leading-relaxed mt-1" style="color: var(--ink-soft)">${a.text}</p>
+                                                        </div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+
+                                        <!-- Interactive Section -->
+                                        <div class="mt-6 pt-4 border-t flex flex-col gap-4" style="border-color: var(--hairline)">
+                                            
+                                            <!-- Default Buttons -->
+                                            ${!s.showContactForm && !s.isSent ? `
+                                                <div class="flex items-center justify-end gap-3">
+                                                    <button data-action="open-contact" data-id="${s.id}" class="flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-all hover:bg-slate-100 text-slate-600 border border-transparent hover:border-slate-200">
+                                                        <i class="ph-bold ph-chat-circle-dots text-sm"></i>
+                                                        Intervenção / Contato
+                                                    </button>
+                                                    <button data-action="toggle-review" data-id="${s.id}" class="flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg transition-all shadow-sm active:scale-95"
+                                                        style="background: ${s.isReviewed ? 'var(--paper-raised)' : 'var(--ink)'}; color: ${s.isReviewed ? 'var(--ink)' : 'var(--paper-raised)'}; border: 1px solid var(--ink)">
+                                                        ${s.isReviewed ? 'Desfazer Revisão' : 'Marcar como Revisado'}
+                                                    </button>
+                                                </div>
+                                            ` : ''}
+
+                                            <!-- Contact Form Component -->
+                                            ${getContactFormHTML(s)}
+
+                                            <!-- Success State -->
+                                            ${s.isSent ? `
+                                                <div class="flex items-center justify-center gap-3 py-6 animate-slide-down rounded-xl border" style="background: var(--teal-soft); border-color: rgba(58, 107, 99, 0.2); color: var(--teal)">
+                                                    <i class="ph-fill ph-check-circle text-2xl"></i>
+                                                    <span class="text-sm font-semibold">
+                                                        ${s.contactMethod === 'phone' ? 'Ligação registrada com sucesso!' : 'Mensagem enviada e aluno atualizado!'}
+                                                    </span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function fullRender() {
+            renderStats();
+            renderFilters();
+            renderStudents();
+        }
+
+        // --- Event Delegation ---
+        document.getElementById('app-container').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            const value = btn.getAttribute('data-value');
+            const method = btn.getAttribute('data-method');
+
+            const student = id ? state.students.find(s => s.id === id) : null;
+            const firstName = student ? getFirstName(student.name) : '';
+
+            switch (action) {
+                case 'filter':
+                    state.filter = value;
+                    fullRender();
+                    break;
+                case 'clear-filters':
+                    state.searchQuery = '';
+                    state.filter = 'all';
+                    document.getElementById('search-input').value = '';
+                    fullRender();
+                    break;
+                case 'toggle-expand':
+                    if (state.expandedId === id) {
+                        // Closing
+                        if (student) {
+                            student.showContactForm = false;
+                            student.isSent = false;
+                        }
+                        state.expandedId = null;
+                    } else {
+                        // Opening
+                        if (state.expandedId) {
+                            const prev = state.students.find(s => s.id === state.expandedId);
+                            if(prev) {
+                                prev.showContactForm = false;
+                                prev.isSent = false;
+                            }
+                        }
+                        state.expandedId = id;
+                    }
+                    fullRender();
+                    break;
+                case 'toggle-review':
+                    if (student) student.isReviewed = !student.isReviewed;
+                    fullRender();
+                    break;
+                case 'open-contact':
+                    if (student) {
+                        student.contactMethod = "whatsapp";
+                        student.messageText = TEMPLATES.whatsapp(firstName, student.course);
+                        student.showContactForm = true;
+                        student.isSent = false;
+                        fullRender();
+                    }
+                    break;
+                case 'close-contact':
+                    if (student) {
+                        student.showContactForm = false;
+                        fullRender();
+                    }
+                    break;
+                case 'switch-method':
+                    if (student) {
+                        student.contactMethod = method;
+                        if (method === 'whatsapp') {
+                            student.messageText = TEMPLATES.whatsapp(firstName, student.course);
+                        } else if (method === 'email') {
+                            student.emailSubject = TEMPLATES.emailSubject(student.course);
+                            student.messageText = TEMPLATES.emailBody(firstName, student.course);
+                        } else {
+                            student.messageText = "";
+                        }
+                        fullRender();
+                    }
+                    break;
+                case 'send-message':
+                    if (student && !student.isSending) {
+                        student.isSending = true;
+                        fullRender(); // Show loading state
+                        
+                        setTimeout(() => {
+                            student.isSending = false;
+                            student.isSent = true;
+                            student.isReviewed = true; // Auto review
+                            fullRender();
+                            
+                            setTimeout(() => {
+                                student.showContactForm = false;
+                                student.isSent = false;
+                                fullRender();
+                            }, 3500);
+                        }, 1200);
+                    }
+                    break;
+            }
+        });
+
+        // Handle text inputs without re-rendering the whole page to preserve focus
+        document.getElementById('app-container').addEventListener('input', (e) => {
+            const inputType = e.target.getAttribute('data-input');
+            const id = e.target.getAttribute('data-id');
+
+            if (id && inputType) {
+                const student = state.students.find(s => s.id === id);
+                if (student) {
+                    if (inputType === 'message') student.messageText = e.target.value;
+                    if (inputType === 'subject') student.emailSubject = e.target.value;
+                    
+                    // Enable/Disable send button logic directly in DOM to avoid full re-render
+                    const sendBtn = document.querySelector(`button[data-action="send-message"][data-id="${id}"]`);
+                    if (sendBtn) {
+                        if (student.contactMethod !== 'phone' && !student.messageText.trim()) {
+                            sendBtn.disabled = true;
+                        } else {
+                            sendBtn.disabled = false;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Global Search Input
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            fullRender();
+        });
+
+        // Global Sort Select
+        document.getElementById('sort-select').addEventListener('change', (e) => {
+            state.sortBy = e.target.value;
+            fullRender();
+        });
+
+        // --- Init ---
+        fullRender();
+    </script>
+</body>
+</html>
